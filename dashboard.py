@@ -1,73 +1,67 @@
+from googleapiclient.discovery import build
+from oauth2client.service_account import ServiceAccountCredentials
 import mailchimp
-import requests
+import analytics
 
+emails = []
+analytics_report = ""
+
+
+# This is the Google AdWords Section of the code #
 def google_grants_stats():
+    print('Starting Google Adwords Grants API Call')
     pass
 
 
 def google_paid_stats():
+    print('Starting Google AdWords Paid API Call')
     pass
 
 
-def mailchimp_stats():
-    print('Loading in Secret Keys')
-    try:
-        username = open('secret_mailchimp_username.txt').read()
-        apikey = open('secret_mailchimp_key.txt').read()
-        split_test = apikey.split('-')
-    except Exception as exc:
-        print('Error downloading files.\n' + str(exc))
-        input('Press any key to exit...')
-        sys.exit()
+# This is the MailChimp Section of the code #
+def mailchimp_control():
+    """
+    This function calls the MailChimp API and pulls the stats for both the lists and the emails
+    It stores the email stats in a list of emails called "email" and the list info in a dictionary called "list_dict"
+    """
+    print('Starting MailChimp API Call')
+    mc_login_info = mailchimp.get_keys()
+    mc_data = mailchimp.open_connection(mc_login_info)
 
-    print('Checking API Key is correctly formatted for MailChimp')
-    if len(split_test) != 2:
-        print(apikey)
-        print('This doesn\'t look like your API Key is formatted correctly: ' + apikey)
-        input('Press any key to exit...')
-        sys.exit()
+    mc_lists = mc_data[0]
+    mc_emails = mc_data[1]
 
-    data_center = split_test[1]
-    apiurl = "https://" + data_center + ".api.mailchimp.com/3.0/"
-    print('API Key looks correct. Attempting to connect to MailChimp API: ' + data_center)
-    connection_info = [username, apikey, apiurl]
+    mc_lists = mailchimp.get_lists(mc_lists)
+    emails[:] = mailchimp.get_emails(mc_emails)
+    return [mc_lists, mc_emails]
 
-    # declaring which fields I want in my list
-    sends_params = {'fields': 'reports.campaign_title,reports.subject_line,reports.'
-                              'emails_sent,reports.opens.unique_opens,reports.opens.open_rate'}
-    lists_params = {'fields': 'lists.id,lists.name,lists.stats.member_count'}
-
-    # This downloads the email reports & lists
-    email_sends = requests.get(connection_info[2] + 'reports', auth=(connection_info[0], connection_info[1]), params=sends_params).json()
-    email_lists = requests.get(connection_info[2] + 'lists?count=100', auth=(connection_info[0], connection_info[1]), params=lists_params).json()
-
-    list_dict = {}
-    for lists in email_lists['lists']:
-        list_dict[lists['name']] = lists['stats']['member_count']
-
-    for sends in email_sends['reports']:
-        # need to create email items. It might be worth moving this into the main file so that I don't need two sub items for email
-        print(sends)
-
-
-
+# This is the Facebook Section of the code #
 def facebook_stats():
+    print('Starting Facebook API Call')
     pass
 
 
+# This is the Twitter Section of the code #
 def twitter_stats():
+    print('Starting Twitter API Call')
     pass
 
 
-def analytics_stats():
+# This is the Google Analytics Section of the code #
+def ga_control():
+    print('Starting Google Analytics API Call')
+    connection_info = analytics.get_keys()
+    report_info = analytics.create_service_object(connection_info)
+
+
+# This is the Web Scrape Section of the code #
+
+
+def start_web_scrape():
     pass
 
 
 def display_results():
-    pass
-
-
-def start_web_scrape():
     pass
 
 
@@ -78,7 +72,9 @@ def main():
     # The first iteration of this function is completed outside of the loop as the home page is hard coded.
     # After the first iteration, the variable changes to "current_url" and can then be looped
     print('Starting Analysis...')
-    mailchimp_stats()
+    mc_data = mailchimp_control()
+    ga_control()
+
     pass
 
 if __name__ == '__main__':
